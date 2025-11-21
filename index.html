@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smilders | Productivity Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #002A57;
+            --secondary: #E3E7ED;
+            --accent: #FF7A2A;
+            --clay-bg: #f0f4f8;
+            --clay-shadow-dark: #c4c9d0;
+            --clay-shadow-light: #ffffff;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--secondary);
+            color: var(--primary);
+            overflow-x: hidden;
+        }
+
+        /* Claymorphism Utilities */
+        .clay-card {
+            background: linear-gradient(145deg, #ffffff, #e6e6e6);
+            background: #E3E7ED;
+            box-shadow:  8px 8px 16px var(--clay-shadow-dark), 
+                         -8px -8px 16px var(--clay-shadow-light);
+            border-radius: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .clay-inset {
+            background: #E3E7ED;
+            box-shadow: inset 6px 6px 12px var(--clay-shadow-dark), 
+                        inset -6px -6px 12px var(--clay-shadow-light);
+            border-radius: 16px;
+        }
+
+        .clay-btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 20px;
+            box-shadow:  5px 5px 10px #bec3c9, 
+                         -5px -5px 10px #ffffff;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            border: none;
+        }
+        
+        .clay-btn-primary:active {
+            transform: scale(0.95);
+            box-shadow: inset 3px 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .clay-btn-accent {
+            background-color: var(--accent);
+            color: white;
+            border-radius: 20px;
+            box-shadow:  5px 5px 10px #bec3c9, 
+                         -5px -5px 10px #ffffff;
+            transition: all 0.1s ease;
+        }
+        
+        .clay-btn-accent:active {
+            transform: scale(0.95);
+        }
+
+        .clay-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translatey(0px); }
+            50% { transform: translatey(-5px); }
+            100% { transform: translatey(0px); }
+        }
+
+        .chat-drawer {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(-100%);
+        }
+        
+        .chat-drawer.open {
+            transform: translateX(0);
+        }
+
+        /* Scrollbar hiding */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Smooth transitions for views */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .nav-item.active i {
+            color: var(--accent);
+            transform: translateY(-5px);
+            filter: drop-shadow(0 4px 2px rgba(0,0,0,0.1));
+        }
+
+        .progress-ring__circle {
+            transition: 0.35s stroke-dashoffset;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Messages */
+        .msg-bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            margin-bottom: 8px;
+        }
+        .msg-own {
+            background-color: var(--primary);
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-other {
+            background-color: white;
+            color: var(--primary);
+            margin-right: auto;
+            border-bottom-left-radius: 2px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col relative">
+
+    <!-- Top Header -->
+    <header class="clay-card mx-4 mt-4 p-4 flex justify-between items-center z-20 relative">
+        <button id="chat-toggle" class="clay-btn-primary w-10 h-10 flex items-center justify-center rounded-full">
+            <i class="bi bi-chat-dots-fill"></i>
+        </button>
+        
+        <div class="flex items-center gap-2">
+            <!-- Logo Idea: Simple shape built with div -->
+            <div class="w-8 h-8 bg-[#002A57] rounded-lg flex items-center justify-center shadow-inner">
+                <span class="text-white font-bold">S</span>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight text-[#002A57]">Smilders</h1>
+        </div>
+
+        <button class="w-10 h-10 flex items-center justify-center text-[#FF7A2A] bg-white rounded-full shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff]">
+            <i class="bi bi-bell-fill"></i>
+            <span class="absolute top-4 right-4 w-3 h-3 bg-red-500 rounded-full border-2 border-[#E3E7ED]"></span>
+        </button>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 pb-24 relative">
+        
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="view-section active">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-[#002A57]">Dashboard</h2>
+                <p class="text-sm text-gray-500">Overview of your operations</p>
+            </div>
+
+            <!-- KPI Row -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="clay-card p-4 flex flex-col items-center justify-center text-center clay-float">
+                    <div class="w-12 h-12 rounded-full bg-[#eef2f6] flex items-center justify-center mb-2 shadow-inner text-blue-600">
+                        <i class="bi bi-briefcase-fill text-xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold text-[#002A57]">12</span>
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Projects</span>
+                </div>
+                <div class="clay-card p-4 flex flex-col items-center justify-center text-center" style="animation-delay: 0.2s;">
+                    <div class="w-12 h-12 rounded-full bg-[#eef2f6] flex items-center justify-center mb-2 shadow-inner text-[#FF7A2A]">
+                        <i class="bi bi-exclamation-triangle-fill text-xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold text-[#002A57]">3</span>
+                    <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Concerns</span>
+                </div>
+            </div>
+
+            <!-- Tasks Due Today -->
+            <div class="clay-card p-5 mb-6 w-full">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Tasks Due Today</h3>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">4 Pending</span>
+                </div>
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-3 border-b border-gray-200 pb-2">
+                        <div class="w-2 h-12 bg-green-400 rounded-full"></div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-sm">Site A: Foundation Check</h4>
+                            <p class="text-xs text-gray-500">Assigned to: Mike R.</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-white shadow text-green-600"><i class="bi bi-check"></i></button>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-12 bg-[#FF7A2A] rounded-full"></div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-sm">Unit 4: Wiring Diagram</h4>
+                            <p class="text-xs text-gray-500">Assigned to: Sarah L.</p>
+                        </div>
+                        <button class="w-8 h-8 rounded-full bg-white shadow text-green-600"><i class="bi bi-check"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <h3 class="font-bold text-lg mb-3 pl-1">Recent Activity</h3>
+            <div class="space-y-4">
+                <div class="bg-[#E3E7ED] p-3 rounded-2xl shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff] flex items-start gap-3">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-xl object-cover shadow-md" alt="User">
+                    <div>
+                        <p class="text-sm font-bold text-[#002A57]">John D. uploaded a file</p>
+                        <p class="text-xs text-gray-500 mb-1">Project: West Wing Renovation</p>
+                        <div class="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-lg shadow-sm text-xs">
+                            <i class="bi bi-file-earmark-pdf text-red-500"></i> blueprints_v2.pdf
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-400 ml-auto">2m</span>
+                </div>
+
+                <div class="bg-[#E3E7ED] p-3 rounded-2xl shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff] flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center shadow-md text-red-500">
+                        <i class="bi bi-exclamation-circle-fill"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-bold text-[#002A57]">Material Delay Reported</p>
+                        <p class="text-xs text-gray-500">Concern raised by Supervisor</p>
+                    </div>
+                    <span class="text-xs text-gray-400 ml-auto">1h</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROJECTS VIEW -->
+        <div id="view-projects" class="view-section">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-[#002A57]">Projects</h2>
+                <button onclick="openProjectModal()" class="clay-btn-accent w-10 h-10 flex items-center justify-center"><i class="bi bi-plus-lg"></i></button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-3 overflow-x-auto no-scrollbar mb-6 pb-2">
+                <button class="px-5 py-2 bg-[#002A57] text-white rounded-full shadow-md text-sm font-semibold whitespace-nowrap">Ongoing</button>
+                <button class="px-5 py-2 bg-[#E3E7ED] text-gray-500 rounded-full shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff] text-sm font-semibold whitespace-nowrap">Paused</button>
+                <button class="px-5 py-2 bg-[#E3E7ED] text-gray-500 rounded-full shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff] text-sm font-semibold whitespace-nowrap">Planning</button>
+                <button class="px-5 py-2 bg-[#E3E7ED] text-gray-500 rounded-full shadow-[5px_5px_10px_#bec3c9,-5px_-5px_10px_#ffffff] text-sm font-semibold whitespace-nowrap">Completed</button>
+            </div>
+
+            <!-- Project List -->
+            <div class="flex flex-col gap-5" id="projects-container">
+                <!-- JS will populate this, but here is a template -->
+                <div onclick="openProjectDetail('Alpha Tower Construction')" class="clay-card p-5 relative cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-bold text-[#002A57]">Alpha Tower Construction</h3>
+                        <div class="px-2 py-1 rounded-md bg-green-100 text-green-700 text-xs font-bold">ON TRACK</div>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4 line-clamp-2">Structural steel phase ongoing. Concrete pouring scheduled for next Tuesday.</p>
+                    
+                    <div class="flex justify-between items-end">
+                        <div class="flex -space-x-3">
+                            <img class="w-8 h-8 rounded-full border-2 border-[#E3E7ED]" src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt=""/>
+                            <img class="w-8 h-8 rounded-full border-2 border-[#E3E7ED]" src="https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&q=80" alt=""/>
+                            <div class="w-8 h-8 rounded-full border-2 border-[#E3E7ED] bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">+4</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500 mb-1">Progress</div>
+                            <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-[#002A57] w-[65%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div onclick="openProjectDetail('Riverside Logistics Hub')" class="clay-card p-5 relative cursor-pointer hover:scale-[1.02] transition-transform">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="text-lg font-bold text-[#002A57]">Riverside Logistics Hub</h3>
+                        <div class="px-2 py-1 rounded-md bg-[#FF7A2A] text-white text-xs font-bold">DELAY RISK</div>
+                    </div>
+                    <p class="text-xs text-gray-500 mb-4">Electrical inspection pending. Waiting on contractor upload.</p>
+                    
+                    <div class="flex justify-between items-end">
+                        <div class="flex -space-x-3">
+                            <img class="w-8 h-8 rounded-full border-2 border-[#E3E7ED]" src="https://images.unsplash.com/photo-1633332755192-727a05c4013d?auto=format&fit=crop&w=100&q=80" alt=""/>
+                            <div class="w-8 h-8 rounded-full border-2 border-[#E3E7ED] bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-600">+2</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500 mb-1">Progress</div>
+                            <div class="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-[#002A57] w-[30%]"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TIMELINE & ANALYTICS VIEW -->
+        <div id="view-timeline" class="view-section">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-[#002A57]">Timeline & Analytics</h2>
+                <p class="text-sm text-gray-500">Performance tracking</p>
+            </div>
+
+            <!-- Gantt Mock -->
+            <div class="clay-card p-4 mb-6 overflow-hidden">
+                <h3 class="font-bold mb-3">Project Schedule</h3>
+                <div class="overflow-x-auto">
+                    <div class="min-w-[400px]">
+                        <div class="flex justify-between text-xs text-gray-400 mb-2">
+                            <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="bg-[#f0f4f8] rounded-lg p-2 relative h-8">
+                                <span class="text-xs font-bold absolute left-2 top-2 z-10">Planning</span>
+                                <div class="absolute top-1 left-1 bottom-1 w-[30%] bg-blue-200 rounded shadow-sm"></div>
+                            </div>
+                            <div class="bg-[#f0f4f8] rounded-lg p-2 relative h-8">
+                                <span class="text-xs font-bold absolute left-2 top-2 z-10">Foundation</span>
+                                <div class="absolute top-1 left-[25%] bottom-1 w-[40%] bg-blue-400 rounded shadow-sm"></div>
+                            </div>
+                            <div class="bg-[#f0f4f8] rounded-lg p-2 relative h-8">
+                                <span class="text-xs font-bold absolute left-2 top-2 z-10">Structure</span>
+                                <div class="absolute top-1 left-[60%] bottom-1 w-[35%] bg-[#002A57] text-white rounded shadow-sm opacity-80"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Productivity Stats -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="clay-card p-4 text-center">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Team Velocity</h4>
+                    <div class="text-3xl font-bold text-green-600">112%</div>
+                    <div class="text-xs text-gray-400">vs last week</div>
+                </div>
+                <div class="clay-card p-4 text-center">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Issues Resolved</h4>
+                    <div class="text-3xl font-bold text-blue-600">14</div>
+                    <div class="text-xs text-gray-400">This month</div>
+                </div>
+            </div>
+
+            <div class="clay-card p-4">
+                <h3 class="font-bold mb-3">Worker Heatmap</h3>
+                <div class="grid grid-cols-7 gap-1">
+                    <!-- Simulating generic heatmap -->
+                    <div class="h-6 rounded bg-blue-100"></div><div class="h-6 rounded bg-blue-200"></div><div class="h-6 rounded bg-blue-300"></div><div class="h-6 rounded bg-blue-400"></div><div class="h-6 rounded bg-blue-500"></div><div class="h-6 rounded bg-blue-600"></div><div class="h-6 rounded bg-blue-200"></div>
+                    <div class="h-6 rounded bg-blue-300"></div><div class="h-6 rounded bg-blue-100"></div><div class="h-6 rounded bg-blue-600"></div><div class="h-6 rounded bg-blue-500"></div><div class="h-6 rounded bg-blue-200"></div><div class="h-6 rounded bg-blue-400"></div><div class="h-6 rounded bg-blue-300"></div>
+                    <div class="h-6 rounded bg-blue-200"></div><div class="h-6 rounded bg-blue-500"></div><div class="h-6 rounded bg-blue-400"></div><div class="h-6 rounded bg-blue-300"></div><div class="h-6 rounded bg-blue-100"></div><div class="h-6 rounded bg-blue-200"></div><div class="h-6 rounded bg-blue-100"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>Mon</span><span>Sun</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONCERNS VIEW -->
+        <div id="view-concerns" class="view-section">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-[#002A57]">Concerns</h2>
+                <button class="clay-btn-accent px-4 py-2 text-xs font-bold uppercase">Raise New</button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="clay-card p-4 border-l-8 border-red-500">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-[#002A57]">Safety Gear Violation</h3>
+                        <span class="text-xs font-bold text-red-500 bg-red-100 px-2 py-1 rounded">Critical</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Workers observed without helmets in Zone B.</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>Assigned to: <span class="font-bold text-[#002A57]">Safety Officer</span></span>
+                        <span><i class="bi bi-paperclip"></i> 2 Photos</span>
+                    </div>
+                </div>
+
+                <div class="clay-card p-4 border-l-8 border-[#FF7A2A]">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-[#002A57]">Cement Shortage</h3>
+                        <span class="text-xs font-bold text-[#FF7A2A] bg-orange-100 px-2 py-1 rounded">Medium</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Supplier delivery delayed by 2 days.</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>Assigned to: <span class="font-bold text-[#002A57]">Procurement</span></span>
+                        <span><i class="bi bi-chat-left-text"></i> 5 Comments</span>
+                    </div>
+                </div>
+                
+                <div class="clay-card p-4 border-l-8 border-green-500 opacity-75">
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-bold text-[#002A57] line-through">Broken Rig</h3>
+                        <span class="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">Resolved</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Hydraulic press fixed by technicians.</p>
+                    <div class="flex items-center justify-between text-xs text-gray-500">
+                        <span>Resolved Today</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SETTINGS VIEW -->
+        <div id="view-settings" class="view-section">
+            <div class="mb-4">
+                <h2 class="text-2xl font-bold text-[#002A57]">Settings</h2>
+            </div>
+
+            <div class="clay-card p-6 flex flex-col items-center mb-6">
+                <div class="w-24 h-24 rounded-full bg-gray-300 mb-4 border-4 border-white shadow-lg overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80" class="w-full h-full object-cover" alt="Profile">
+                </div>
+                <h3 class="text-xl font-bold text-[#002A57]">Alex Morgan</h3>
+                <p class="text-sm text-[#FF7A2A] font-bold">Project Manager</p>
+            </div>
+
+            <div class="clay-card p-5 space-y-4 mb-6">
+                <h4 class="font-bold text-gray-400 uppercase text-xs tracking-wider border-b pb-2">Personal Info</h4>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-gray-500">Full Name</label>
+                    <input type="text" value="Alex Morgan" class="w-full p-3 clay-inset text-[#002A57] outline-none border-none text-sm font-semibold">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-gray-500">Email ID</label>
+                    <input type="email" value="alex.m@smilders.com" class="w-full p-3 clay-inset text-[#002A57] outline-none border-none text-sm font-semibold">
+                </div>
+            </div>
+
+            <div class="clay-card p-5 space-y-4">
+                <h4 class="font-bold text-gray-400 uppercase text-xs tracking-wider border-b pb-2">Preferences</h4>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-[#002A57]">Push Notifications</span>
+                    <div class="w-12 h-6 bg-[#002A57] rounded-full relative cursor-pointer">
+                        <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 right-0.5"></div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-bold text-[#002A57]">Email Reports</span>
+                    <div class="w-12 h-6 bg-gray-300 rounded-full relative cursor-pointer">
+                        <div class="w-5 h-5 bg-white rounded-full absolute top-0.5 left-0.5 shadow-md"></div>
+                    </div>
+                </div>
+                <button class="w-full py-3 text-red-500 font-bold text-sm mt-4">Log Out</button>
+            </div>
+        </div>
+
+        <!-- SPACER FOR BOTTOM NAV -->
+        <div class="h-20"></div>
+    </main>
+
+    <!-- Chat Drawer (Overlay) -->
+    <div id="chat-drawer-overlay" class="fixed inset-0 bg-black bg-opacity-30 z-40 hidden" onclick="toggleChat()"></div>
+    <div id="chat-drawer-panel" class="chat-drawer fixed top-0 left-0 h-full w-80 bg-[#E3E7ED] z-50 shadow-2xl p-4 flex flex-col">
+        <div class="flex justify-between items-center mb-6 pt-2">
+            <h2 class="text-xl font-bold text-[#002A57]">Team Chat</h2>
+            <button onclick="toggleChat()" class="text-gray-500"><i class="bi bi-x-lg text-lg"></i></button>
+        </div>
+
+        <!-- Search -->
+        <div class="mb-4 relative">
+            <i class="bi bi-search absolute left-3 top-3 text-gray-400 text-sm"></i>
+            <input type="text" placeholder="Search users..." class="w-full pl-9 pr-4 py-2.5 clay-inset text-sm outline-none bg-transparent">
+        </div>
+
+        <!-- User List -->
+        <div class="flex-1 overflow-y-auto space-y-3 no-scrollbar" id="chat-user-list">
+            <!-- Users mock -->
+            <div onclick="openChatWindow('Mike Ross')" class="clay-card p-3 flex items-center gap-3 cursor-pointer hover:bg-white transition-colors">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-full object-cover border border-white">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#E3E7ED] rounded-full"></span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-[#002A57]">Mike Ross</h4>
+                    <p class="text-xs text-gray-500 truncate w-32">Updated the site logs.</p>
+                </div>
+            </div>
+            
+            <div onclick="openChatWindow('Sarah Lee')" class="clay-card p-3 flex items-center gap-3 cursor-pointer hover:bg-white transition-colors">
+                <div class="relative">
+                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-full object-cover border border-white">
+                    <span class="absolute bottom-0 right-0 w-3 h-3 bg-gray-400 border-2 border-[#E3E7ED] rounded-full"></span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-[#002A57]">Sarah Lee</h4>
+                    <p class="text-xs text-gray-500 truncate w-32">Can you check the PDF?</p>
+                </div>
+            </div>
+            
+            <!-- Groups -->
+            <div class="mt-4 mb-2 text-xs font-bold text-gray-400 uppercase">Groups</div>
+            <div class="clay-card p-3 flex items-center gap-3 cursor-pointer">
+                <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-[#002A57] font-bold text-xs">
+                    AT
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-[#002A57]">Alpha Team</h4>
+                    <p class="text-xs text-gray-500">3 new messages</p>
+                </div>
+            </div>
+        </div>
+        
+        <button class="mt-4 w-full py-3 clay-btn-primary font-bold text-sm flex items-center justify-center gap-2">
+            <i class="bi bi-plus-circle"></i> New Task from Chat
+        </button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 w-full bg-[#E3E7ED]/90 backdrop-blur-md pb-safe border-t border-white/50 z-30">
+        <div class="flex justify-around items-center p-4 max-w-md mx-auto">
+            <button class="nav-item active flex flex-col items-center gap-1 text-gray-400 transition-all" onclick="switchView('dashboard', this)">
+                <i class="bi bi-grid-1x2-fill text-xl"></i>
+                <span class="text-[10px] font-bold">Home</span>
+            </button>
+            <button class="nav-item flex flex-col items-center gap-1 text-gray-400 transition-all" onclick="switchView('projects', this)">
+                <i class="bi bi-folder-fill text-xl"></i>
+                <span class="text-[10px] font-bold">Projects</span>
+            </button>
+            <button class="nav-item flex flex-col items-center gap-1 text-gray-400 transition-all" onclick="switchView('timeline', this)">
+                <i class="bi bi-bar-chart-fill text-xl"></i>
+                <span class="text-[10px] font-bold">Timeline</span>
+            </button>
+            <button class="nav-item flex flex-col items-center gap-1 text-gray-400 transition-all" onclick="switchView('concerns', this)">
+                <i class="bi bi-exclamation-octagon-fill text-xl"></i>
+                <span class="text-[10px] font-bold">Concerns</span>
+            </button>
+            <button class="nav-item flex flex-col items-center gap-1 text-gray-400 transition-all" onclick="switchView('settings', this)">
+                <i class="bi bi-gear-fill text-xl"></i>
+                <span class="text-[10px] font-bold">Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Project Detail Modal -->
+    <div id="project-detail-modal" class="fixed inset-0 z-50 hidden flex flex-col bg-[#E3E7ED] animate-slideUp">
+        <div class="p-4 flex justify-between items-center bg-[#E3E7ED] shadow-sm z-10">
+            <button onclick="closeProjectDetail()" class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center text-[#002A57]"><i class="bi bi-arrow-left text-lg"></i></button>
+            <h2 class="font-bold text-[#002A57] truncate max-w-[200px]" id="detail-title">Project Title</h2>
+            <button class="w-10 h-10 rounded-full bg-white shadow flex items-center justify-center text-[#002A57]"><i class="bi bi-three-dots-vertical"></i></button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-6">
+            <!-- Status Card -->
+            <div class="clay-card p-5">
+                <h3 class="text-sm text-gray-500 mb-1">Status</h3>
+                <div class="flex justify-between items-baseline">
+                    <span class="text-2xl font-bold text-[#002A57]">Ongoing</span>
+                    <span class="text-sm font-bold text-green-600">On Schedule</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5 mt-3">
+                    <div class="bg-[#002A57] h-2.5 rounded-full" style="width: 65%"></div>
+                </div>
+                <p class="text-right text-xs text-gray-500 mt-1">65% Complete</p>
+            </div>
+
+            <!-- Tasks -->
+            <div class="flex justify-between items-center">
+                <h3 class="font-bold text-lg text-[#002A57]">Tasks</h3>
+                <button class="text-xs font-bold text-[#FF7A2A]">+ Add Task</button>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="clay-card p-4 flex items-start gap-3">
+                    <input type="checkbox" class="mt-1 w-4 h-4 accent-[#002A57]">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-[#002A57]">Pour concrete for slab B</h4>
+                        <p class="text-xs text-gray-500">Due: Tomorrow, 5:00 PM</p>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80" class="w-6 h-6 rounded-full">
+                </div>
+                <div class="clay-card p-4 flex items-start gap-3 opacity-75">
+                    <input type="checkbox" checked class="mt-1 w-4 h-4 accent-[#002A57]">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-[#002A57] line-through">Site Excavation</h4>
+                        <p class="text-xs text-gray-500">Completed Yesterday</p>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" class="w-6 h-6 rounded-full">
+                </div>
+            </div>
+
+            <!-- Files -->
+            <div class="space-y-3">
+                 <h3 class="font-bold text-lg text-[#002A57]">Files</h3>
+                 <div class="grid grid-cols-3 gap-3">
+                     <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center aspect-square">
+                         <i class="bi bi-file-earmark-pdf text-3xl text-red-500 mb-2"></i>
+                         <span class="text-[10px] font-bold text-gray-600 truncate w-full text-center">Plans.pdf</span>
+                     </div>
+                     <div class="bg-white p-3 rounded-xl shadow-sm flex flex-col items-center justify-center aspect-square">
+                        <i class="bi bi-images text-3xl text-blue-500 mb-2"></i>
+                        <span class="text-[10px] font-bold text-gray-600 truncate w-full text-center">Site.jpg</span>
+                    </div>
+                     <div class="bg-[#E3E7ED] rounded-xl border-2 border-dashed border-gray-400 flex flex-col items-center justify-center aspect-square text-gray-400">
+                        <i class="bi bi-plus text-2xl"></i>
+                        <span class="text-[10px] font-bold">Upload</span>
+                    </div>
+                 </div>
+            </div>
+        </div>
+        
+        <div class="p-4 bg-[#E3E7ED] border-t border-white/50">
+            <button class="w-full clay-btn-primary py-3 font-bold">Update Progress</button>
+        </div>
+    </div>
+
+    <!-- Active Chat Modal (simplified) -->
+    <div id="active-chat-modal" class="fixed inset-0 z-[60] hidden flex flex-col bg-[#E3E7ED]">
+        <div class="p-4 flex items-center gap-3 bg-[#E3E7ED] border-b border-white shadow-sm">
+            <button onclick="closeChatWindow()" class="text-gray-600"><i class="bi bi-chevron-left text-lg"></i></button>
+            <div class="relative">
+                <img src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&q=80" class="w-10 h-10 rounded-full object-cover">
+                <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></span>
+            </div>
+            <div>
+                <h3 class="font-bold text-[#002A57]" id="chat-name">Mike Ross</h3>
+                <p class="text-xs text-green-600">Online</p>
+            </div>
+            <button class="ml-auto text-gray-500"><i class="bi bi-telephone-fill"></i></button>
+        </div>
+        
+        <div class="flex-1 p-4 overflow-y-auto bg-[#f0f4f8] flex flex-col gap-2" id="chat-history">
+            <div class="msg-bubble msg-other">Hey, did you upload the logs?</div>
+            <div class="msg-bubble msg-own">Yes, just did it a minute ago.</div>
+            <div class="msg-bubble msg-own">Check the dashboard.</div>
+            <div class="msg-bubble msg-other">Got it, thanks! I'll review it now.</div>
+        </div>
+
+        <div class="p-3 bg-[#E3E7ED] flex items-center gap-2">
+            <button class="w-10 h-10 rounded-full bg-white text-gray-500 shadow flex items-center justify-center text-lg"><i class="bi bi-paperclip"></i></button>
+            <input type="text" placeholder="Type a message..." class="flex-1 p-3 rounded-full border-none outline-none bg-white shadow-inner text-sm">
+            <button class="w-10 h-10 rounded-full bg-[#002A57] text-white shadow flex items-center justify-center"><i class="bi bi-send-fill text-xs"></i></button>
+        </div>
+    </div>
+
+    <script>
+        // --- Navigation & View Switching ---
+        function switchView(viewId, btnElement) {
+            // Hide all views
+            document.querySelectorAll('.view-section').forEach(el => {
+                el.classList.remove('active');
+                el.style.display = 'none'; // Ensure display none when not active for animations
+            });
+            
+            // Show target view
+            const target = document.getElementById('view-' + viewId);
+            target.style.display = 'block';
+            setTimeout(() => target.classList.add('active'), 10);
+
+            // Update Navigation Icons
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-[#002A57]'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.add('text-gray-400'));
+            
+            btnElement.classList.add('active', 'text-[#002A57]');
+            btnElement.classList.remove('text-gray-400');
+        }
+
+        // --- Chat Drawer Logic ---
+        const chatDrawerPanel = document.getElementById('chat-drawer-panel');
+        const chatOverlay = document.getElementById('chat-drawer-overlay');
+        const chatBtn = document.getElementById('chat-toggle');
+
+        function toggleChat() {
+            const isOpen = chatDrawerPanel.classList.contains('open');
+            if (isOpen) {
+                chatDrawerPanel.classList.remove('open');
+                setTimeout(() => chatOverlay.classList.add('hidden'), 300);
+            } else {
+                chatOverlay.classList.remove('hidden');
+                // Short delay to allow display:block to apply before transition
+                setTimeout(() => chatDrawerPanel.classList.add('open'), 10);
+            }
+        }
+
+        chatBtn.addEventListener('click', toggleChat);
+
+        // --- Project Detail Modal ---
+        const projectModal = document.getElementById('project-detail-modal');
+        
+        function openProjectDetail(title) {
+            document.getElementById('detail-title').textContent = title;
+            projectModal.classList.remove('hidden');
+        }
+        
+        function closeProjectDetail() {
+            projectModal.classList.add('hidden');
+        }
+
+        // --- Mock Project Creation ---
+        function openProjectModal() {
+            alert('This would open the Project Creation Wizard.\n\n1. Enter Title\n2. Assign Team\n3. Set Deadlines');
+        }
+
+        // --- Chat Window Logic ---
+        const chatModal = document.getElementById('active-chat-modal');
+        
+        function openChatWindow(name) {
+            document.getElementById('chat-name').textContent = name;
+            chatModal.classList.remove('hidden');
+            toggleChat(); // Close drawer behind it
+        }
+        
+        function closeChatWindow() {
+            chatModal.classList.add('hidden');
+        }
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure dashboard is visible manually to be safe
+            document.getElementById('view-dashboard').style.display = 'block';
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
